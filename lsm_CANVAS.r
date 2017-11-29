@@ -52,6 +52,7 @@ dt<-60           #model timestep [s]
 t.day<-3     	 #Run time in days
 tmax<-t.day*24*3600  #maximum time [s]
 
+
 #Downward shortwave radiation
 t.hr<-0:24
 #a) hourly varying
@@ -122,18 +123,43 @@ rv.f<-function(T,VPD,gvmax,Tmin.c=0,Tmax.c=60,Topt.c=30,VPDmin=1500,VPDmax=7500)
 rvs<-rv.f(T=273.15+20,VPD=0:4000,gvmax=gvmax)
 
 #function to calculate aerodynamic resistance
-ra.f<-function(Ur=1,zr=50,z0=z0,d=0,rho=1){
+##########orginal formulation################
+#ra.f<-function(Ur=1,zr=50,z0=z0,d=0,rho=1){
   #arguments:  Ur is reference windspeed [m/s] at reference height zr
   #            zr is reference height [m] where Ur applies
   #            z0 is roughness length [m]; 0.01m is typical value for crop
   #            d is displacement height [m]
   #            rho is air density [kg/m^3]
-  k<-0.4  #von Karman constant
+#  k<-0.4  #von Karman constant
+#
+#  CD<-(k^2)/(log((zr-d)/z0))^2   #aerodynamic transfer coefficient
+#  ra<-1/(CD*Ur)                  #aerodynamic resistance [s/m]
+#  return(ra)
+#} #ra.f<-function(){
+############Shao et. al. 2013 for SGS scalar formulation#########
+ra.f<-function(zr=zr,z0=z0){
+  #z0<-0.01 #roughness length 0.001 for deseret playa (Chaoxun et al. 2016)
+  k<-0.4 #Von Karman constant
+  C_k<-0.15 #empirical parameter ~0.15
+  e<-10 #Subgrid TKE?
+  l=zr #mixing length, approximated as grid spacing
+  Pr<-0.3 #Prandlt Number 
+  
+  #calculate the Subgrid eddy diffusivity
+  K_sg<-C_k*(sqrt(e)/k) 
+  
+  #Calculate the subgrid eddy diffusivity for a scalar
+  K_hsg<-K_sg*Pr^(-1)
+  
+  #calculate the subgrid areodynamic resistance
+  ra<-(zr/K_hsg)*log(zr/z0)
+  
+}#ra.f<-function()
 
-  CD<-(k^2)/(log((zr-d)/z0))^2   #aerodynamic transfer coefficient
-  ra<-1/(CD*Ur)                  #aerodynamic resistance [s/m]
-  return(ra)
-} #ra.f<-function(){
+
+
+
+
 
 #V2(120211): initialize T with equilibrium value (determined through "uniroot")
 f<-function(T,Ta,SWdn,LWdn,albedo,epsilon.s,Ur,zr,z0,gvmax=gvmax){
@@ -150,7 +176,7 @@ f<-function(T,Ta,SWdn,LWdn,albedo,epsilon.s,Ur,zr,z0,gvmax=gvmax){
   
   #determine sensible heat flux
   rho<-1   #air density [kg/m3]
-  ra<-ra.f(Ur=Ur,zr=zr,z0=z0,rho=rho)
+  ra<-ra.f(zr=zr,z0=z0)
   H<-(Cp*rho/(ra))*(T-Ta)   #[W/m2]
 
   #determine latent heat flux
@@ -261,7 +287,7 @@ while(tcurr<tmax){
   } #if(atmrespondTF){
   #determine sensible heat flux
   rho<-1   #air density [kg/m3]
-  ra<-ra.f(Ur=Ur,zr=zr,z0=z0,rho=rho)
+  ra<-ra.f(zr=zr,z0=z0)
   H<-(Cp*rho/(ra))*(T-Ta)   #[W/m2]
 
   #determine latent heat flux
