@@ -52,6 +52,24 @@ dt<-60           #model timestep [s]
 t.day<-3     	 #Run time in days
 tmax<-t.day*24*3600  #maximum time [s]
 
+############## IMPORT Data ######################
+
+#MATERHORN data
+dir <- "C:/Users/tjmor/OneDrive/Research/Data/MATERHORN/"
+filenm<-paste(dir,"playa_05_2013_5min_data_only.csv",sep="")
+tmp<-read.csv(filenm)
+tmp<-as.matrix(tmp)
+Radiation_data<-tmp
+
+data<-Radiation_data[,1:3]
+
+
+#Cabow Data
+
+
+
+
+#################################################
 
 #Downward shortwave radiation
 t.hr<-0:24
