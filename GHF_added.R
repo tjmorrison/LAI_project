@@ -42,17 +42,6 @@ ABLTF<-FALSE           #does ABL growth or decay, according to surface heat flux
 groundwaterTF<-FALSE   #does the groundwater respond to the atmosphere?
 cloudTF<-FALSE         #cloud physics response to relative humidity
 
-#Land surface characteristics 
-gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
-albedo.c<-mean(SWup)/mean(SWdn)    #surface albedo computed from mean Rad data
-alpha_soil<-0.4 #[m2/s] from exp data
-albedo<-albedo.c #surface albedo
-z0<-0.01          #roughness length [m] for Playa (Morrison et al. 2017)
-T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017) 
-epsilon.s<-0.97  #surface emissivity for forest, according to Jin & Liang [2006]
-dt<-60           #model timestep [s]
-t.day<-3     	 #Run time in days
-tmax<-t.day*24*3600  #maximum time [s]
 
 ############## IMPORT Data ######################
 
@@ -80,29 +69,47 @@ day<-20*24
 start<-5762
 start_index = 6410+12 #correlates to May 23 0700 UTC 
 end_index = 6698+24 #correlates to May 24 0800 UTC
-SWdn<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
-SWup<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
-#SWdn=rep(NA,length(t.hr))
-#cnt = 1
-#shift = 12
-#for(i in 1:length(t.hr)){
-#  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
-#  cnt<-cnt+shift
-#}
+SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
+SWup_data<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
+SWdn=rep(NA,length(t.hr))
+cnt = 1
+shift = 12
+for(i in 1:length(t.hr)){
+  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
+  cnt<-cnt+shift
+}
 
 
 #Downward longwave radiation
 #a)Orginal LWdn
 #LWdn<-SWdn;LWdn[1:length(LWdn)]<-350 #constant downward longwave radiation [W/m2]
 #b) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
-LWdn<-sapply(Radiation_data[5762:6050,8],as.numeric)
+LWdn_data<-sapply(Radiation_data[5762:6050,8],as.numeric)
+LWdn=rep(NA,length(t.hr))
+cnt = 1
+shift = 12
+for(i in 1:length(t.hr)){
+  LWdn[i] = mean(LWdn_data[cnt:(cnt+shift)])
+  cnt<-cnt+shift
+}
 
-
+#Land surface characteristics 
+gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
+albedo.c<-mean(SWup_data)/mean(SWdn_data)    #surface albedo computed from mean Rad data
+alpha_soil<-0.4 #[m2/s] from exp data
+albedo<-albedo.c #surface albedo
+z0<-0.01          #roughness length [m] for Playa (Morrison et al. 2017)
+T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017) 
+epsilon.s<-0.97  #surface emissivity for forest, according to Jin & Liang [2006]
+dt<-60           #model timestep [s]
+t.day<-3     	 #Run time in days
+tmax<-t.day*24*3600  #maximum time [s]
 
 #Air temperature
-Ta.c<--0.5*(t.hr-12)^2+30  #PRESCRIBED air temperature [deg-C]
+#Ta.c<--0.5*(t.hr-12)^2+30  #PRESCRIBED air temperature [deg-C]
+Ta.c<--0.2*(t.hr-12)^2+30
 names(Ta.c)<-t.hr
-Ta.c[1:length(Ta.c)]<-5    #override with CONSTANT air temperature [deg-C]
+#Ta.c[1:length(Ta.c)]<-5    #override with CONSTANT air temperature [deg-C]
 
 ###################### Soil Properties edited for Exp Data (Morrison et al. 2017)
 #heat capacity of land surface 
@@ -121,7 +128,7 @@ Cs<-Cp.soil*rho.soil*D #heat capacity of organic soil [J/K/m2]
 #qair<-2/1000      #specific humidity of air [g/g]
 #JHD
 #  RH<-1.0     	   #Edited this to force precipitation
-RH<-0.8
+RH<-0.1 #Changed from .8
 e<-RH*satvap(mean(Ta.c))/100  #vapor pressure [hPa]
 Psurf<-1000     #surface pressure [hPa] 
 qair<-(Rd/Rv)*e/Psurf   #specific humidity [g/g]
@@ -247,8 +254,8 @@ xinterv<-Ta.c[1]+273.15+c(-50,50)  #interval over which to search for equil temp
 # a) use AVERAGE radiation, temps, to solve for initial equil. temperature
 #Tinit<-uniroot(f,interval=xinterv,Ta=mean(Ta.c)+273.15,SWdn=mean(SWdn),LWdn=mean(LWdn),albedo=albedo,epsilon.s=epsilon.s,CD=CD,Ubar=Ubar,gvmax=gvmax)$root
 # b) use initial radiation, temps to solve for initial equil. temperature
-Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax)$root
-#Tinit<-300
+#Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax)$root
+Tinit<-300
 #Impose perturbation
 #Tinit<-Tinit+10
 
@@ -386,15 +393,15 @@ while(tcurr<tmax){
   } else{LE = (lambda*rho/(ra+rv))*(qstar-qa)} #[W/m2]
   ###########################################determine ground heat flux 
   #a) orginal method(as residual)
-  G<-Rnet-LE-H  
+  #G<-Rnet-LE-H  
   #b) Solve the multi-layer temperature diffusion Eqn. 
-  #T_g<-T_g.f(Tg=Tg,T=T,T0=T0, nu.soil=nu.soil,dt=dt,dz=dz)
+  T_g<-T_g.f(Tg=Tg,T=T,T0=T0, nu.soil=nu.soil,dt=dt,dz=dz)
   #solve GHF
-  #G_profile=c(0,0,0,0)
-  #for(j in 2:length(dz)){
-  #  G_profile[j]=k.soil*((T_g[j-1]-T_g[j])/dz)
- # }
-  #G=mean(G_profile)
+  G_profile=c(0,0,0,0)
+  for(j in 2:length(dz)){
+    G_profile[j]=k.soil*((T_g[j-1]-T_g[j])/dz)
+  }
+  G=mean(G_profile)
   #update temperature 
   dT<-(G/Cs)*dt
   T<-T+dT
