@@ -61,7 +61,6 @@ tmp<-read.csv(filenm)
 tmp<-as.matrix(tmp)
 Radiation_data<-tmp
 
-data<-Radiation_data[,1:3]
 
 
 #Cabow Data
@@ -69,32 +68,54 @@ data<-Radiation_data[,1:3]
 
 
 
-#################################################
+############ Radiation options changed for Exp Data################
 
 #Downward shortwave radiation
 t.hr<-0:24
 #a) hourly varying
-SWdn<--15*(t.hr-12)^2+800 #hourly downward shortwave radiation [W/m2]
-names(SWdn)<-t.hr
-SWdn[as.character(c(0:5,19:24))]<-0
+#SWdn<--15*(t.hr-12)^2+800 #hourly downward shortwave radiation [W/m2]
+#names(SWdn)<-t.hr
+#SWdn[as.character(c(0:5,19:24))]<-0
 #b) constant
 #SWdn[1:length(SWdn)]<-1000
 
+#c) examining data from IOP9, May 21st 2013 @ playa site
+day<-20*24
+start<-5762
+start_index = 6410+12 #correlates to May 23 0700 UTC 
+end_index = 6698+24 #correlates to May 24 0800 UTC
+SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
+SWdn=rep(NA,length(t.hr))
+cnt = 1
+shift = 12
+for(i in 1:length(t.hr)){
+  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
+  cnt<-cnt+shift
+}
+
+
+
 #Downward longwave radiation
-LWdn<-SWdn;LWdn[1:length(LWdn)]<-350 #constant downward longwave radiation [W/m2]
+#a)Orginal LWdn
+#LWdn<-SWdn;LWdn[1:length(LWdn)]<-350 #constant downward longwave radiation [W/m2]
+#b) examining data from IOP9, May 21st 2013 @ playa site
+LWdn<-sapply(Radiation_data[5762:6050,8],as.numeric)
 
 #Air temperature
 Ta.c<--0.5*(t.hr-12)^2+30  #PRESCRIBED air temperature [deg-C]
 names(Ta.c)<-t.hr
 Ta.c[1:length(Ta.c)]<-5    #override with CONSTANT air temperature [deg-C]
 
-#heat capacity of land surface
+###################### Soil Properties edited for Exp Data 
+#heat capacity of land surface 
 #D<-0.1*(dt/tmax)      #the depth of soil that temp fluctuations would penetrate [m]; 0.1m is roughly the depth that would penetrate on diurnal timescales
 #D<-0.1
 D<-0.1*(1/24)          #the depth of soil that temp fluctuations would penetrate [m]; 0.1m is roughly the depth that would penetrate on diurnal timescales
 Cp.soil<-1921          #specific heat of soil organic material [J/kg/K]
 rho.soil<-1300         #density of soil organic material [kg/m3]
 Cs<-Cp.soil*rho.soil*D #heat capacity of organic soil [J/K/m2]
+
+#Soil properties changed for Playa
 
 #specific humidity of air:  determine from RH, air temperature
 #qair<-2/1000      #specific humidity of air [g/g]
@@ -284,14 +305,14 @@ while(tcurr<tmax){
                 }
         }
   LWup<-epsilon.s*sigma*T^4   #upward longwave radiation [W/m2]
-  LWdn.t<-approx(x=as.numeric(names(LWdn))*3600,y=LWdn,xout=tcurr%%(24*3600))$y  #downward shortwave radiation [W/m2]
+  LWdn.t<-approx(x=t.hr*3600,y=LWdn,xout=tcurr%%(24*3600))$y  #downward shortwave radiation [W/m2]
   if(cloudTF){
 	RHe = 0.5				#fitting parameter sets TCC to gain at approximately 60% humidity
 	tcc = min(exp((qM/qstar-1)/(1-RHe)),1) 	#Walcek 1994 model equation (1) 	
 	LWdn.t<- LWup-100+80*(tcc)
 	albedo = albedo.c+0.75*(tcc)
 	}
-  SWdn.t<-approx(x=as.numeric(names(SWdn))*3600,y=SWdn,xout=tcurr%%(24*3600))$y  #downward shortwave radiation [W/m2]
+  SWdn.t<-approx(x=t.hr*3600,y=SWdn,xout=tcurr%%(24*3600))$y  #downward shortwave radiation [W/m2]
   SWup<-albedo*SWdn.t
   #determine net radiation
   Rnet<-SWdn.t-SWup+LWdn.t-LWup
