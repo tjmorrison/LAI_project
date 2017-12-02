@@ -37,20 +37,11 @@ Rv<-461.40 #Ideal Gas Constant of water vapor [J/kg/K] (Appendix A.1.4 of Jacobs
 sigma<-5.670373E-8    #Stefan-Boltzmann constant [W/m2/K4]
 ##########################################
 vegcontrolTF<-FALSE    #vegetation control?
-atmrespondTF<-FALSE    #does atmosphere respond to surface fluxes?
-ABLTF<-FALSE           #does ABL growth or decay, according to surface heat fluxes?
+atmrespondTF<-TRUE    #does atmosphere respond to surface fluxes?
+ABLTF<-TRUE           #does ABL growth or decay, according to surface heat fluxes?
 groundwaterTF<-FALSE   #does the groundwater respond to the atmosphere?
 cloudTF<-FALSE         #cloud physics response to relative humidity
 
-#Land surface characteristics
-gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
-albedo.c<-0.1    #surface albedo
-albedo<-albedo.c #surface albedo
-z0<-0.5          #roughness length [m]
-epsilon.s<-0.97  #surface emissivity for forest, according to Jin & Liang [2006]
-dt<-60           #model timestep [s]
-t.day<-3     	 #Run time in days
-tmax<-t.day*24*3600  #maximum time [s]
 
 ############## IMPORT Data ######################
 
@@ -60,12 +51,6 @@ filenm<-paste(dir,"playa_05_2013_5min_data_only.csv",sep="")
 tmp<-read.csv(filenm)
 tmp<-as.matrix(tmp)
 Radiation_data<-tmp
-
-
-
-#Cabow Data
-
-
 
 
 ############ Radiation options changed for Exp Data################
@@ -79,27 +64,37 @@ t.hr<-0:24
 #b) constant
 #SWdn[1:length(SWdn)]<-1000
 
-#c) examining data from IOP9, May 21st 2013 @ playa site
+#c) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
 day<-20*24
 start<-5762
 start_index = 6410+12 #correlates to May 23 0700 UTC 
 end_index = 6698+24 #correlates to May 24 0800 UTC
-SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
-SWdn=rep(NA,length(t.hr))
-cnt = 1
-shift = 12
-for(i in 1:length(t.hr)){
-  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
-  cnt<-cnt+shift
-}
-
+SWdn<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
+SWup<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
+#SWdn=rep(NA,length(t.hr))
+#cnt = 1
+#shift = 12
+#for(i in 1:length(t.hr)){
+#  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
+#  cnt<-cnt+shift
+#}
 
 
 #Downward longwave radiation
 #a)Orginal LWdn
 #LWdn<-SWdn;LWdn[1:length(LWdn)]<-350 #constant downward longwave radiation [W/m2]
-#b) examining data from IOP9, May 21st 2013 @ playa site
+#b) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
 LWdn<-sapply(Radiation_data[5762:6050,8],as.numeric)
+
+#Land surface characteristics 
+gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
+albedo.c<-mean(SWup)/mean(SWdn)    #surface albedo computed from mean Rad data
+albedo<-albedo.c #surface albedo
+z0<-0.5          #roughness length [m]
+epsilon.s<-0.97  #surface emissivity for forest, according to Jin & Liang [2006]
+dt<-60           #model timestep [s]
+t.day<-3     	 #Run time in days
+tmax<-t.day*24*3600  #maximum time [s]
 
 #Air temperature
 Ta.c<--0.5*(t.hr-12)^2+30  #PRESCRIBED air temperature [deg-C]
@@ -374,6 +369,7 @@ while(tcurr<tmax){
     	LE  = sum(evap)*(lambda/dt)*(dx*1000)  #[W/m2] 
   } else{LE = (lambda*rho/(ra+rv))*(qstar-qa)} #[W/m2]
   #determine ground heat flux (as residual)
+  #
   G<-Rnet-LE-H  
 
   #update temperature 
