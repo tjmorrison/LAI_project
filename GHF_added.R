@@ -42,6 +42,17 @@ ABLTF<-FALSE           #does ABL growth or decay, according to surface heat flux
 groundwaterTF<-FALSE   #does the groundwater respond to the atmosphere?
 cloudTF<-FALSE         #cloud physics response to relative humidity
 
+#Land surface characteristics 
+gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
+albedo.c<-mean(SWup)/mean(SWdn)    #surface albedo computed from mean Rad data
+alpha_soil<-0.4 #[m2/s] from exp data
+albedo<-albedo.c #surface albedo
+z0<-0.01          #roughness length [m] for Playa (Morrison et al. 2017)
+T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017) 
+epsilon.s<-0.97  #surface emissivity for forest, according to Jin & Liang [2006]
+dt<-60           #model timestep [s]
+t.day<-3     	 #Run time in days
+tmax<-t.day*24*3600  #maximum time [s]
 
 ############## IMPORT Data ######################
 
@@ -86,17 +97,7 @@ SWup<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
 #b) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
 LWdn<-sapply(Radiation_data[5762:6050,8],as.numeric)
 
-#Land surface characteristics 
-gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
-albedo.c<-mean(SWup)/mean(SWdn)    #surface albedo computed from mean Rad data
-alpha_soil<-0.4 #[m2/s] from exp data
-albedo<-albedo.c #surface albedo
-z0<-0.01          #roughness length [m] for Playa (Morrison et al. 2017)
-T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017) 
-epsilon.s<-0.97  #surface emissivity for forest, according to Jin & Liang [2006]
-dt<-60           #model timestep [s]
-t.day<-3     	 #Run time in days
-tmax<-t.day*24*3600  #maximum time [s]
+
 
 #Air temperature
 Ta.c<--0.5*(t.hr-12)^2+30  #PRESCRIBED air temperature [deg-C]
@@ -194,7 +195,7 @@ ra.f<-function(zr=zr,z0=z0){
   
 }#ra.f<-function()
 
-###########Shao Ground heat flux model
+###########Shao Ground temperature model
 T_g.f<-function(Tg=Tg,T=T,T0=T0, nu.soil=nu.soil,dt=dt,dz=dz){
   s_dt = T0 # temperature source in Shao model
   for(z in 2:length(dz)){
@@ -292,7 +293,7 @@ f_c   = 0.8 #field capacity
 w_p   = 0.2 #wilting point
 tcc = 0 #total cloud fraction
 ################Ground Model Vars##############################
-T_g<-c(T,0,0,0,T0) #initial profile
+T_g<-c(T,T,T,T,T0) #initial profile
 dz=c(0.01,0.02,0.03,0.04)
 ###############################################################
 while(tcurr<tmax){
@@ -387,12 +388,12 @@ while(tcurr<tmax){
   #a) orginal method(as residual)
   G<-Rnet-LE-H  
   #b) Solve the multi-layer temperature diffusion Eqn. 
-  T_g<-T_g.f(Tg=Tg,T=T,T0=T0, nu.soil=nu.soil,dt=dt,dz=dz)
+  #T_g<-T_g.f(Tg=Tg,T=T,T0=T0, nu.soil=nu.soil,dt=dt,dz=dz)
   #solve GHF
-  G_profile=c(0,0,0,0)
-  for(j in 2:length(dz)){
-    G_profile[j]=k.soil*((T_g[j-1]-T_g[j])/dz)
-  }
+  #G_profile=c(0,0,0,0)
+  #for(j in 2:length(dz)){
+  #  G_profile[j]=k.soil*((T_g[j-1]-T_g[j])/dz)
+ # }
   #G=mean(G_profile)
   #update temperature 
   dT<-(G/Cs)*dt
