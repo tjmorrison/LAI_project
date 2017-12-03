@@ -84,7 +84,7 @@ for(i in 1:length(t.hr)){
 #a)Orginal LWdn
 #LWdn<-SWdn;LWdn[1:length(LWdn)]<-350 #constant downward longwave radiation [W/m2]
 #b) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
-LWdn_data<-sapply(Radiation_data[5762:6050,8],as.numeric)
+LWdn_data<-sapply(Radiation_data[start_index:end_index,8],as.numeric)
 LWdn=rep(NA,length(t.hr))
 cnt = 1
 shift = 12
@@ -254,8 +254,8 @@ xinterv<-Ta.c[1]+273.15+c(-50,50)  #interval over which to search for equil temp
 # a) use AVERAGE radiation, temps, to solve for initial equil. temperature
 #Tinit<-uniroot(f,interval=xinterv,Ta=mean(Ta.c)+273.15,SWdn=mean(SWdn),LWdn=mean(LWdn),albedo=albedo,epsilon.s=epsilon.s,CD=CD,Ubar=Ubar,gvmax=gvmax)$root
 # b) use initial radiation, temps to solve for initial equil. temperature
-Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax)$root
-Tinit<-290.15
+#Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax)$root
+Tinit<-290.14
 #Impose perturbation
 #Tinit<-Tinit+10
 
@@ -359,38 +359,38 @@ while(tcurr<tmax){
   }else{
     rv<-1/gvmax
   } #if(vegcontrolTF){
-  if(groundwaterTF){
-    PET = (lambda*rho/(ra+rv))*(qstar-qa) #[W/m2] Calculates the potential energy rather. Not potential evapotranspiration.
-    ##################
-    #Raining Condtion#
-    ##################
-    if(qM>qstar){
-		evap = evap*0     		#Evaporation is 0 when raining
-		infil = (qM-qstar)*h/(1000*dx)
-		qM = qstar
-		qair = qstar
-		qa   = qstar
-		}
-    #######################
-    #Evaporation Condition#
-    #######################
-    if(qM<qstar){
-		infil = 0 		#Rain/Infiltration is set to 0
-                ###################
-		#Evaporation Model#
-		################### 
-
-		sf_factor = (1/(1:(l/dx)))        			#scaling factor linear model set equal to 1 (-)
-		sf_factor[(l/dx-5):(l/dx)] = 0				#Moving evaporation away from influence of BC
-		sf_factor = (sf_factor/sum(sf_factor))			#scaling factor linear model set equal to 1 (-)
-
-		av_theta = ((theta[i,]-w_p)/(f_c-w_p))  		#Available Mositure Content (-)
-		PET_frac = ((PET/lambda*dt)/1000)/dx			#PET represented as MC (-) 
-		evap = sf_factor * av_theta * PET_frac			#Evaporation represented as moisture content (-)
-		}
-        srce   = infil-sum(evap)    
-    	LE  = sum(evap)*(lambda/dt)*(dx*1000)  #[W/m2] 
-  } else{LE = (lambda*rho/(ra+rv))*(qstar-qa)} #[W/m2]
+#   if(groundwaterTF){
+#     PET = (lambda*rho/(ra+rv))*(qstar-qa) #[W/m2] Calculates the potential energy rather. Not potential evapotranspiration.
+#     ##################
+#     #Raining Condtion#
+#     ##################
+#     if(qM>qstar){
+# 		evap = evap*0     		#Evaporation is 0 when raining
+# 		infil = (qM-qstar)*h/(1000*dx)
+# 		qM = qstar
+# 		qair = qstar
+# 		qa   = qstar
+# 		}
+#     #######################
+#     #Evaporation Condition#
+#     #######################
+#     if(qM<qstar){
+# 		infil = 0 		#Rain/Infiltration is set to 0
+#                 ###################
+# 		#Evaporation Model#
+# 		################### 
+# 
+# 		sf_factor = (1/(1:(l/dx)))        			#scaling factor linear model set equal to 1 (-)
+# 		sf_factor[(l/dx-5):(l/dx)] = 0				#Moving evaporation away from influence of BC
+# 		sf_factor = (sf_factor/sum(sf_factor))			#scaling factor linear model set equal to 1 (-)
+# 
+# 		av_theta = ((theta[i,]-w_p)/(f_c-w_p))  		#Available Mositure Content (-)
+# 		PET_frac = ((PET/lambda*dt)/1000)/dx			#PET represented as MC (-) 
+# 		evap = sf_factor * av_theta * PET_frac			#Evaporation represented as moisture content (-)
+# 		}
+#         srce   = infil-sum(evap)    
+#     	LE  = sum(evap)*(lambda/dt)*(dx*1000)  #[W/m2] 
+#   } else{LE = (lambda*rho/(ra+rv))*(qstar-qa)} #[W/m2]
   ###########################################determine ground heat flux 
   #a) orginal method(as residual)
   #G<-Rnet-LE-H  
@@ -402,6 +402,7 @@ while(tcurr<tmax){
     G_profile[j-1]=k.soil*((T_g[j-1]-T_g[j])/dz)
   }
   G=mean(G_profile)
+  LE=Rnet-H-G
   #update temperature 
   dT<-(G/Cs)*dt
   T<-T+dT

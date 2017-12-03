@@ -69,22 +69,29 @@ day<-20*24
 start<-5762
 start_index = 6410+12 #correlates to May 23 0700 UTC 
 end_index = 6698+24 #correlates to May 24 0800 UTC
-SWdn<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
-SWup<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
-#SWdn=rep(NA,length(t.hr))
-#cnt = 1
-#shift = 12
-#for(i in 1:length(t.hr)){
-#  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
-#  cnt<-cnt+shift
-#}
+SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
+SWup_data<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
+SWdn=rep(NA,length(t.hr))
+cnt = 1
+shift = 12
+for(i in 1:length(t.hr)){
+  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
+  cnt<-cnt+shift
+}
 
 
 #Downward longwave radiation
 #a)Orginal LWdn
 #LWdn<-SWdn;LWdn[1:length(LWdn)]<-350 #constant downward longwave radiation [W/m2]
 #b) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
-LWdn<-sapply(Radiation_data[5762:6050,8],as.numeric)
+LWdn_data<-sapply(Radiation_data[start_index:end_index,8],as.numeric)
+LWdn=rep(NA,length(t.hr))
+cnt = 1
+shift = 12
+for(i in 1:length(t.hr)){
+  LWdn[i] = mean(LWdn_data[cnt:(cnt+shift)])
+  cnt<-cnt+shift
+}
 
 #Land surface characteristics 
 gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
@@ -194,17 +201,6 @@ ra.f<-function(zr=zr,z0=z0){
   
 }#ra.f<-function()
 
-###########Shao Ground heat flux model
-T_g.f<-function(Tg=Tg,T=T,T0=T0, nu.soil=nu.soil,dt=dt,dz=dz){
-  s_dt = T0 # temperature source in Shao model
-  for(z in 2:length(dz)){
-    T_g[z]=nu.soil*dt*((T_g[z-1]+2*T_g[z]-T_g[z+1])/dz[z-1])+s_dt
-  }
-  return(T_g)
-}
-
-
-
 
 #V2(120211): initialize T with equilibrium value (determined through "uniroot")
 f<-function(T,Ta,SWdn,LWdn,albedo,epsilon.s,Ur,zr,z0,gvmax=gvmax){
@@ -247,7 +243,6 @@ xinterv<-Ta.c[1]+273.15+c(-50,50)  #interval over which to search for equil temp
 #Tinit<-uniroot(f,interval=xinterv,Ta=mean(Ta.c)+273.15,SWdn=mean(SWdn),LWdn=mean(LWdn),albedo=albedo,epsilon.s=epsilon.s,CD=CD,Ubar=Ubar,gvmax=gvmax)$root
 # b) use initial radiation, temps to solve for initial equil. temperature
 Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax)$root
-#Tinit<-300
 #Impose perturbation
 #Tinit<-Tinit+10
 
@@ -386,19 +381,11 @@ while(tcurr<tmax){
   ###########################################determine ground heat flux 
   #a) orginal method(as residual)
   G<-Rnet-LE-H  
-  #b) Solve the multi-layer temperature diffusion Eqn. 
-  T_g<-T_g.f(Tg=Tg,T=T,T0=T0, nu.soil=nu.soil,dt=dt,dz=dz)
-  #solve GHF
-  G_profile=c(0,0,0,0)
-  for(j in 2:length(dz)){
-    G_profile[j]=k.soil*((T_g[j-1]-T_g[j])/dz)
-  }
-  #G=mean(G_profile)
+  
   #update temperature 
   dT<-(G/Cs)*dt
   T<-T+dT
-  #Update T_g
-  T_g[1] = T
+ 
   
   #if want atmosphere to respond
   #Based on "zero-order jump" or "slab" model of convective boundary layer, described in Pg. 151~155 of Garratt [1992]
