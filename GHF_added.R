@@ -101,7 +101,7 @@ albedo<-albedo.c #surface albedo
 z0<-0.01          #roughness length [m] for Playa (Morrison et al. 2017)
 T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017) 
 epsilon.s<-0.97  #surface emissivity for forest, according to Jin & Liang [2006]
-dt<-60           #model timestep [s]
+dt<- 10#60           #model timestep [s]
 t.day<-3     	 #Run time in days
 tmax<-t.day*24*3600  #maximum time [s]
 
@@ -254,8 +254,8 @@ xinterv<-Ta.c[1]+273.15+c(-50,50)  #interval over which to search for equil temp
 # a) use AVERAGE radiation, temps, to solve for initial equil. temperature
 #Tinit<-uniroot(f,interval=xinterv,Ta=mean(Ta.c)+273.15,SWdn=mean(SWdn),LWdn=mean(LWdn),albedo=albedo,epsilon.s=epsilon.s,CD=CD,Ubar=Ubar,gvmax=gvmax)$root
 # b) use initial radiation, temps to solve for initial equil. temperature
-#Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax)$root
-Tinit<-300
+Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax)$root
+Tinit<-290.15
 #Impose perturbation
 #Tinit<-Tinit+10
 
@@ -398,8 +398,8 @@ while(tcurr<tmax){
   T_g<-T_g.f(Tg=Tg,T=T,T0=T0, nu.soil=nu.soil,dt=dt,dz=dz)
   #solve GHF
   G_profile=c(0,0,0,0)
-  for(j in 2:length(dz)){
-    G_profile[j]=k.soil*((T_g[j-1]-T_g[j])/dz)
+  for(j in 2:length(T_g)){
+    G_profile[j-1]=k.soil*((T_g[j-1]-T_g[j])/dz)
   }
   G=mean(G_profile)
   #update temperature 
