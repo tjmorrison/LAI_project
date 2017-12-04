@@ -43,18 +43,6 @@ groundwaterTF<-FALSE   #does the groundwater respond to the atmosphere?
 cloudTF<-FALSE         #cloud physics response to relative humidity
 
 
-############## IMPORT Data ######################
-
-#MATERHORN data
-#dir for laptop
-#dir <- "C:/Users/tjmor/OneDrive/Research/Data/MATERHORN/"
-#dir for school computer 
-dir<-"/Users/travismorrison/Local_Data/MATERHORN/data/tower_data/LAI_data/"
-filenm<-paste(dir,"playa_05_2013_5min_data_only.csv",sep="")
-tmp<-read.csv(filenm)
-tmp<-as.matrix(tmp)
-Radiation_data<-tmp
-
 
 ############ Radiation options changed for Exp Data################
 
@@ -71,33 +59,68 @@ t.hr<-0:24
 day<-20*24
 start_index = 6410+12 #correlates to May 23 0700 UTC 
 end_index = 6698+24 #correlates to May 24 0800 UTC
-SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
-SWup<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
-SWdn=rep(NA,length(t.hr))
+
+############## IMPORT Data ######################
+
+#MATERHORN data
+#dir for laptop
+#dir <- "C:/Users/tjmor/OneDrive/Research/Data/MATERHORN/"
+#dir for school computer 
+dir<-"/Users/travismorrison/Local_Data/MATERHORN/data/tower_data/LAI_data/"
+#filenm<-paste(dir,"playa_05_2013_5min_data_only.csv",sep="")
+filenm<-paste(dir,"radiation_data.csv",sep="")
+tmp<-read.csv(filenm)
+tmp<-as.matrix(tmp)
+Radiation_data<-tmp
+
+rad_data<-Radiation_data[start_index:end_index,]
+rad_data[ ,4] = rad_data[ ,4]-7
+rad_data[rad_data[,4]< 0,4] = rad_data[rad_data[,4]< 0,4]+24
+
+SWdn = aggregate(rad_data[,6],list(rad_data[,4]),mean)
+SWdn[25,1]<-24
+SWdn[25,2]<-mean(Radiation_data[end_index:end_index+10,6])
+SWdn = SWdn[,2]
+names(SWdn)<-t.hr
+
+LWdn =  aggregate(rad_data[,8],list(rad_data[,4]),mean)
+LWdn[25,1]<-24
+LWdn[25,2]<-mean(Radiation_data[end_index:end_index+10,8])
+LWdn = LWdn[,2]
+names(LWdn)<-t.hr
+
+SWup = aggregate(rad_data[,7],list(rad_data[,4]),mean)
+SWup[25,1]<-24
+SWup[25,2]<-mean(Radiation_data[end_index:end_index+10,7])
+SWup = SWup[,2]
+names(SWup)<-t.hr
+#SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
+#SWup<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
+#SWdn=rep(NA,length(t.hr))
 cnt = 1
 shift = 12
-for(i in 1:length(t.hr)){
-  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
-  cnt<-cnt+shift
-}
+#for(i in 1:length(t.hr)){
+#  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
+#  cnt<-cnt+shift
+#}
 
 
 #Downward longwave radiation
 #a)Orginal LWdn
 #LWdn<-SWdn;LWdn[1:length(LWdn)]<-350 #constant downward longwave radiation [W/m2]
 #b) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
-LWdn_data<-sapply(Radiation_data[start_index:end_index,8],as.numeric)
-LWdn=rep(NA,length(t.hr))
-cnt = 1
-shift = 12
-for(i in 1:length(t.hr)){
-  LWdn[i] = mean(LWdn_data[cnt:(cnt+shift)])
-  cnt<-cnt+shift
-}
+#LWdn_data<-sapply(Radiation_data[start_index:end_index,8],as.numeric)
+#LWdn=rep(NA,length(t.hr))
+cnt = 0
+shift = 11
+#for(i in 1:length(t.hr)){
+#  LWdn[i] = mean(LWdn_data[cnt:(cnt+shift)])
+#  cnt<-cnt+shift
+#}
 
 #Land surface characteristics 
 gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
-albedo.c<-mean(SWup)/mean(SWdn)    #surface albedo computed from mean Rad data
+albedo.c<-0.3 #mean(SWup[,2])/mean(SWdn)    #surface albedo computed from mean Rad data
 albedo<-albedo.c #surface albedo
 z0<-0.01          #roughness length [m] for Playa (Morrison et al. 2017)
 T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017) 
@@ -314,14 +337,14 @@ while(tcurr<tmax){
                 }
         }
   LWup<-epsilon.s*sigma*T^4   #upward longwave radiation [W/m2]
-  LWdn.t<-approx(x=t.hr*3600,y=LWdn,xout=tcurr%%(24*3600))$y  #downward shortwave radiation [W/m2]
+  LWdn.t<-approx(x=as.numeric(names(LWdn))*3600,y=LWdn,xout=tcurr%%(24*3600))$y  #downward shortwave radiation [W/m2]
   if(cloudTF){
 	RHe = 0.5				#fitting parameter sets TCC to gain at approximately 60% humidity
 	tcc = min(exp((qM/qstar-1)/(1-RHe)),1) 	#Walcek 1994 model equation (1) 	
 	LWdn.t<- LWup-100+80*(tcc)
 	albedo = albedo.c+0.75*(tcc)
 	}
-  SWdn.t<-approx(x=t.hr*3600,y=SWdn,xout=tcurr%%(24*3600))$y  #downward shortwave radiation [W/m2]
+  SWdn.t<-approx(x=as.numeric(names(SWdn))*3600,y=SWdn,xout=tcurr%%(24*3600))$y  #downward shortwave radiation [W/m2]
   SWup<-albedo*SWdn.t
   #determine net radiation
   Rnet<-SWdn.t-SWup+LWdn.t-LWup
