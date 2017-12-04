@@ -49,7 +49,7 @@ cloudTF<-FALSE         #cloud physics response to relative humidity
 #dir for laptop
 #dir <- "C:/Users/tjmor/OneDrive/Research/Data/MATERHORN/"
 #dir for school computer 
-
+dir<-"/Users/travismorrison/Local_Data/MATERHORN/data/tower_data/LAI_data/"
 filenm<-paste(dir,"playa_05_2013_5min_data_only.csv",sep="")
 tmp<-read.csv(filenm)
 tmp<-as.matrix(tmp)
@@ -72,7 +72,7 @@ day<-20*24
 start_index = 6410+12 #correlates to May 23 0700 UTC 
 end_index = 6698+24 #correlates to May 24 0800 UTC
 SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
-SWup_data<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
+SWup<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
 SWdn=rep(NA,length(t.hr))
 cnt = 1
 shift = 12
@@ -335,6 +335,7 @@ while(tcurr<tmax){
   } #if(atmrespondTF){
   #determine sensible heat flux
   rho<-1   #air density [kg/m3]
+  
   ra<-ra.f(zr=zr,z0=z0)
   H<-(Cp*rho/(ra))*(T-Ta)   #[W/m2]
 

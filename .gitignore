@@ -1,2 +1,6 @@
 
 .Rapp.history
+
+*.png
+
+*.csv
