@@ -46,7 +46,10 @@ cloudTF<-FALSE         #cloud physics response to relative humidity
 ############## IMPORT Data ######################
 
 #MATERHORN data
-dir <- "C:/Users/tjmor/OneDrive/Research/Data/MATERHORN/"
+#dir for laptop
+#dir <- "C:/Users/tjmor/OneDrive/Research/Data/MATERHORN/"
+#dir for school computer 
+
 filenm<-paste(dir,"playa_05_2013_5min_data_only.csv",sep="")
 tmp<-read.csv(filenm)
 tmp<-as.matrix(tmp)
@@ -66,7 +69,6 @@ t.hr<-0:24
 
 #c) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
 day<-20*24
-start<-5762
 start_index = 6410+12 #correlates to May 23 0700 UTC 
 end_index = 6698+24 #correlates to May 24 0800 UTC
 SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
@@ -96,11 +98,11 @@ for(i in 1:length(t.hr)){
 #Land surface characteristics 
 gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
 albedo.c<-mean(SWup)/mean(SWdn)    #surface albedo computed from mean Rad data
-alpha_soil<-0.4 #[m2/s] from exp data
 albedo<-albedo.c #surface albedo
 z0<-0.01          #roughness length [m] for Playa (Morrison et al. 2017)
 T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017) 
-epsilon.s<-0.97  #surface emissivity for forest, according to Jin & Liang [2006]
+epsilon.s<-0.93  #surface emissivity for forest, according to Jin & Liang [2006]             
+                #Emissivity from for desert from Jin & Lang
 dt<-60           #model timestep [s]
 t.day<-3     	 #Run time in days
 tmax<-t.day*24*3600  #maximum time [s]
@@ -114,13 +116,14 @@ Ta.c[1:length(Ta.c)]<-5    #override with CONSTANT air temperature [deg-C]
 #heat capacity of land surface 
 #D<-0.1*(dt/tmax)      #the depth of soil that temp fluctuations would penetrate [m]; 0.1m is roughly the depth that would penetrate on diurnal timescales
 #D<-0.1
-D<-0.1*(1/24)          #the depth of soil that temp fluctuations would penetrate [m]; 0.1m is roughly the depth that would penetrate on diurnal timescales
-Cp.soil<-1542.8          #specific heat of soil organic material [J/kg/K]
+#D<-0.1*(1/24)          #the depth of soil that temp fluctuations would penetrate [m]; 0.1m is roughly the depth that would penetrate on diurnal timescales
+D<-0.7                  #from exp data from playa (Morrison et al)
+Cp.soil<-1542.8         #specific heat of soil organic material [J/kg/K]
 rho.soil<-1425          #density of soil organic material [kg/m3]
 nu.soil<-0.4E-6         #Thermal diffusivity for playa [m2/s]
 k.soil<-0.9             #themal conductivity for playa [W/mK]
 Cs<-Cp.soil*rho.soil*D #heat capacity of organic soil [J/K/m2]
-
+alpha_soil<-0.4 #[m2/s] from exp data
 #Soil properties changed for Playa
 
 #specific humidity of air:  determine from RH, air temperature
@@ -140,7 +143,8 @@ gamma<-5/1000   #slope of thetav above growing ABL [K/m]
 qabove<-qair/5  #specific humidity of air above ABL [g/g] changed from 5 to 1
 W<-0            #subsidence rate [m/s]
 Ur<-1           #reference windspeed [m/s] at reference height zr
-zr<-50          #reference height [m] where Ur applies
+zr<-25          #reference height [m] where Ur applies
+                #changed to height where tower data was collected 
 ##########################################
 
 #function to calculate vegetation resistance
@@ -381,7 +385,6 @@ while(tcurr<tmax){
   ###########################################determine ground heat flux 
   #a) orginal method(as residual)
   G<-Rnet-LE-H  
-  
   #update temperature 
   dT<-(G/Cs)*dt
   T<-T+dT
