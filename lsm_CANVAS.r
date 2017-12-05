@@ -68,11 +68,19 @@ end_index = 6698+24 #correlates to May 24 0800 UTC
 #dir for school computer 
 dir<-"/Users/travismorrison/Local_Data/MATERHORN/data/tower_data/LAI_data/"
 #filenm<-paste(dir,"playa_05_2013_5min_data_only.csv",sep="")
+
+
 filenm<-paste(dir,"radiation_data.csv",sep="")
 tmp<-read.csv(filenm)
 tmp<-as.matrix(tmp)
 Radiation_data<-tmp
 
+filenm<-paste(dir,"tke.csv",sep="")
+tmp<-read.csv(filenm,header = FALSE, stringsAsFactors=FALSE)
+tmp<-as.matrix(tmp)
+tke<-sapply(tmp,as.numeric)
+names(tke)<-t.hr
+############## assign Rad Data ######################
 rad_data<-Radiation_data[start_index:end_index,]
 rad_data[ ,4] = rad_data[ ,4]-7
 rad_data[rad_data[,4]< 0,4] = rad_data[rad_data[,4]< 0,4]+24
@@ -94,16 +102,6 @@ SWup[25,1]<-24
 SWup[25,2]<-mean(Radiation_data[end_index:end_index+10,7])
 SWup = SWup[,2]
 names(SWup)<-t.hr
-#SWdn_data<-sapply(Radiation_data[start_index:end_index,6],as.numeric)
-#SWup<-sapply(Radiation_data[start_index:end_index,7],as.numeric)
-#SWdn=rep(NA,length(t.hr))
-cnt = 1
-shift = 12
-#for(i in 1:length(t.hr)){
-#  SWdn[i] = mean(SWdn_data[cnt:(cnt+shift)])
-#  cnt<-cnt+shift
-#}
-
 
 #Downward longwave radiation
 #a)Orginal LWdn
@@ -111,12 +109,7 @@ shift = 12
 #b) examining data from IOP9, 23-24 May 2013 @ from 0700-0800UTC playa site
 #LWdn_data<-sapply(Radiation_data[start_index:end_index,8],as.numeric)
 #LWdn=rep(NA,length(t.hr))
-cnt = 0
-shift = 11
-#for(i in 1:length(t.hr)){
-#  LWdn[i] = mean(LWdn_data[cnt:(cnt+shift)])
-#  cnt<-cnt+shift
-#}
+
 
 #Land surface characteristics 
 gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
@@ -127,7 +120,7 @@ T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017)
 epsilon.s<-0.93  #surface emissivity for forest, according to Jin & Liang [2006]             
                 #Emissivity from for desert from Jin & Lang
 dt<-60           #model timestep [s]
-t.day<-20     	 #Run time in days
+t.day<-30     	 #Run time in days
 tmax<-t.day*24*3600  #maximum time [s]
 
 #Air temperature
@@ -209,28 +202,26 @@ rvs<-rv.f(T=273.15+20,VPD=0:4000,gvmax=gvmax)
 #  return(ra)
 #} #ra.f<-function(){
 ############Shao et. al. 2013 for SGS scalar formulation#########
-ra.f<-function(zr=zr,z0=z0){
+ra.f<-function(zr=zr,z0=z0,tke=tke){
   #z0<-0.01 #roughness length 0.001 for deseret playa (Chaoxun et al. 2016)
   k<-0.4 #Von Karman constant
   C_k<-0.15 #empirical parameter ~0.15
-  e<-10 #Subgrid TKE?
   l=zr #mixing length, approximated as grid spacing
   Pr<-0.3 #Prandlt Number 
   
   #calculate the Subgrid eddy diffusivity
-  K_sg<-C_k*(sqrt(e)/k) 
+  K_sg<-C_k*(sqrt(tke)/k) 
   
   #Calculate the subgrid eddy diffusivity for a scalar
   K_hsg<-K_sg*Pr^(-1)
   
   #calculate the subgrid areodynamic resistance
   ra<-(zr/K_hsg)*log(zr/z0)
-  
 }#ra.f<-function()
 
 
 #V2(120211): initialize T with equilibrium value (determined through "uniroot")
-f<-function(T,Ta,SWdn,LWdn,albedo,epsilon.s,Ur,zr,z0,gvmax=gvmax){
+f<-function(T,Ta,SWdn,LWdn,albedo,epsilon.s,Ur,zr,z0,gvmax=gvmax,tke=tke){
    #--------------Physical constants--------#
   Cp<-1005.7;Cv<-719 #heat capacities @ constant pressure & volume [J/kg/K] (Appendix 2 of Emanuel [1994])
   g<-9.80665 #standard surface gravity [m/s2]
@@ -244,7 +235,7 @@ f<-function(T,Ta,SWdn,LWdn,albedo,epsilon.s,Ur,zr,z0,gvmax=gvmax){
   
   #determine sensible heat flux
   rho<-1   #air density [kg/m3]
-  ra<-ra.f(zr=zr,z0=z0)
+  ra<-ra.f(zr=zr,z0=z0,tke = tke)
   H<-(Cp*rho/(ra))*(T-Ta)   #[W/m2]
 
   #determine latent heat flux
@@ -269,7 +260,7 @@ xinterv<-Ta.c[1]+273.15+c(-50,50)  #interval over which to search for equil temp
 # a) use AVERAGE radiation, temps, to solve for initial equil. temperature
 #Tinit<-uniroot(f,interval=xinterv,Ta=mean(Ta.c)+273.15,SWdn=mean(SWdn),LWdn=mean(LWdn),albedo=albedo,epsilon.s=epsilon.s,CD=CD,Ubar=Ubar,gvmax=gvmax)$root
 # b) use initial radiation, temps to solve for initial equil. temperature
-Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax)$root
+Tinit<-uniroot(f,interval=xinterv,Ta=Ta.c[1]+273.15,SWdn=SWdn[1],LWdn=LWdn[1],albedo=albedo,epsilon.s=epsilon.s,Ur=Ur,zr=zr,z0=z0,gvmax=gvmax,tke=tke[1])$root
 #Impose perturbation
 #Tinit<-Tinit+10
 
@@ -357,9 +348,9 @@ while(tcurr<tmax){
     qa<-qair
   } #if(atmrespondTF){
   #determine sensible heat flux
+  tke.t<-approx(x=as.numeric(names(tke))*3600,y=as.numeric(tke),xout=tcurr%%(24*3600))$y #tke[(tcurr%%(24*3600))]
   rho<-1   #air density [kg/m3]
-  
-  ra<-ra.f(zr=zr,z0=z0)
+  ra<-ra.f(zr=zr,z0=z0,tke=tke.t)
   H<-(Cp*rho/(ra))*(T-Ta)   #[W/m2]
 
   #determine latent heat flux
@@ -405,7 +396,8 @@ while(tcurr<tmax){
 		}
         srce   = infil-sum(evap)    
     	LE  = sum(evap)*(lambda/dt)*(dx*1000)  #[W/m2] 
-  } else{LE = (lambda*rho/(ra+rv))*(qstar-qa)} #[W/m2]
+  } else{#LE = (lambda*rho/(ra+rv))*(qstar-qa)} #[W/m2]
+    LE=.30*H}
   ###########################################determine ground heat flux 
   #a) orginal method(as residual)
   G<-Rnet-LE-H  
