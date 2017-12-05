@@ -37,8 +37,8 @@ Rv<-461.40 #Ideal Gas Constant of water vapor [J/kg/K] (Appendix A.1.4 of Jacobs
 sigma<-5.670373E-8    #Stefan-Boltzmann constant [W/m2/K4]
 ##########################################
 vegcontrolTF<-FALSE    #vegetation control?
-atmrespondTF<-FALSE    #does atmosphere respond to surface fluxes?
-ABLTF<-FALSE           #does ABL growth or decay, according to surface heat fluxes?
+atmrespondTF<-TRUE    #does atmosphere respond to surface fluxes?
+ABLTF<-TRUE           #does ABL growth or decay, according to surface heat fluxes?
 groundwaterTF<-FALSE   #does the groundwater respond to the atmosphere?
 cloudTF<-FALSE         #cloud physics response to relative humidity
 
@@ -127,7 +127,7 @@ T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017)
 epsilon.s<-0.93  #surface emissivity for forest, according to Jin & Liang [2006]             
                 #Emissivity from for desert from Jin & Lang
 dt<-60           #model timestep [s]
-t.day<-3     	 #Run time in days
+t.day<-20     	 #Run time in days
 tmax<-t.day*24*3600  #maximum time [s]
 
 #Air temperature
