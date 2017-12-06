@@ -38,7 +38,7 @@ sigma<-5.670373E-8    #Stefan-Boltzmann constant [W/m2/K4]
 ##########################################
 vegcontrolTF<-FALSE    #vegetation control?
 atmrespondTF<-TRUE    #does atmosphere respond to surface fluxes?
-ABLTF<-TRUE           #does ABL growth or decay, according to surface heat fluxes?
+ABLTF<-FALSE           #does ABL growth or decay, according to surface heat fluxes?
 groundwaterTF<-FALSE   #does the groundwater respond to the atmosphere?
 cloudTF<-FALSE         #cloud physics response to relative humidity
 
@@ -115,12 +115,12 @@ names(SWup)<-t.hr
 gvmax<-1/50      #max vegetation conductance [m/s]; reciprocal of vegetation resistance
 albedo.c<-0.3 #mean(SWup[,2])/mean(SWdn)    #surface albedo computed from mean Rad data
 albedo<-albedo.c #surface albedo
-z0<-0.01          #roughness length [m] for Playa (Morrison et al. 2017)
+z0<-0.11e-3          #roughness length [m] for Playa (Jensen et al)
 T0<-290.15 # Deep soil temperature [K] for playa (Morrison et al. 2017) 
 epsilon.s<-0.93  #surface emissivity for forest, according to Jin & Liang [2006]             
                 #Emissivity from for desert from Jin & Lang
 dt<-60           #model timestep [s]
-t.day<-30     	 #Run time in days
+t.day<-10     	 #Run time in days
 tmax<-t.day*24*3600  #maximum time [s]
 
 #Air temperature
@@ -153,6 +153,7 @@ qair<-(Rd/Rv)*e/Psurf   #specific humidity [g/g]
 
 #atmospheric conditions
 hmin<-100       #minimum height of atmospheric boundary layer [m]
+hmax<-20000      #max height of ABL [m]
 thetavM0<-(Ta.c[1]+273.15)*(1+0.61*qair) #initial virtual potential temperature [K]; Eq. 1.5.1b of Stull [1988]
 Beta<-0.2       #closure hypothesis:  fraction of surface virtual potential temperature flux that determines entrainment heat flux
 gamma<-5/1000   #slope of thetav above growing ABL [K/m]
@@ -189,35 +190,35 @@ rvs<-rv.f(T=273.15+20,VPD=0:4000,gvmax=gvmax)
 
 #function to calculate aerodynamic resistance
 ##########orginal formulation################
-#ra.f<-function(Ur=1,zr=50,z0=z0,d=0,rho=1){
+ra.f<-function(Ur=1,zr=50,z0=z0,d=0,rho=1,tke=tke){
   #arguments:  Ur is reference windspeed [m/s] at reference height zr
   #            zr is reference height [m] where Ur applies
   #            z0 is roughness length [m]; 0.01m is typical value for crop
   #            d is displacement height [m]
   #            rho is air density [kg/m^3]
-#  k<-0.4  #von Karman constant
-#
-#  CD<-(k^2)/(log((zr-d)/z0))^2   #aerodynamic transfer coefficient
-#  ra<-1/(CD*Ur)                  #aerodynamic resistance [s/m]
-#  return(ra)
-#} #ra.f<-function(){
+  k<-0.4  #von Karman constant
+  tke = tke; 
+ CD<-(k^2)/(log((zr-d)/z0))^2   #aerodynamic transfer coefficient
+  ra<-1/(CD*Ur)                  #aerodynamic resistance [s/m]
+  return(ra)
+} #ra.f<-function(){
 ############Shao et. al. 2013 for SGS scalar formulation#########
-ra.f<-function(zr=zr,z0=z0,tke=tke){
+#ra.f<-function(zr=zr,z0=z0,tke=tke){
   #z0<-0.01 #roughness length 0.001 for deseret playa (Chaoxun et al. 2016)
-  k<-0.4 #Von Karman constant
-  C_k<-0.15 #empirical parameter ~0.15
-  l=zr #mixing length, approximated as grid spacing
-  Pr<-0.3 #Prandlt Number 
+#  k<-0.4 #Von Karman constant
+#  C_k<-0.15 #empirical parameter ~0.15
+#  l=zr #zr #mixing length, approximated as grid spacing
+#  Pr<-0.3 #Prandlt Number 
   
   #calculate the Subgrid eddy diffusivity
-  K_sg<-C_k*(sqrt(tke)/k) 
+#  K_sg<-C_k*(sqrt(tke)/k) 
   
   #Calculate the subgrid eddy diffusivity for a scalar
-  K_hsg<-K_sg*Pr^(-1)
+ # K_hsg<-K_sg*Pr^(-1)
   
   #calculate the subgrid areodynamic resistance
-  ra<-(zr/K_hsg)*log(zr/z0)
-}#ra.f<-function()
+ # ra<-(zr/K_hsg)*log(zr/z0)
+#}#ra.f<-function()
 
 
 #V2(120211): initialize T with equilibrium value (determined through "uniroot")
@@ -270,6 +271,7 @@ tcurr<-0
 T<-Tinit
 result_s<-NULL
 h<-hmin     #initialize with minimum 
+
 thetaM<-Ta.c[1]+273.15
 qM<-qair   #initialize with prescribed specific humidity [g/g]
 thetavM<-thetaM*(1+0.61*qM)   #virtual potential temperature [K];  Eq. 1.5.1b of Stull [1988]
@@ -397,7 +399,7 @@ while(tcurr<tmax){
         srce   = infil-sum(evap)    
     	LE  = sum(evap)*(lambda/dt)*(dx*1000)  #[W/m2] 
   } else{#LE = (lambda*rho/(ra+rv))*(qstar-qa)} #[W/m2]
-    LE=.30*H}
+    LE=.18*H}
   ###########################################determine ground heat flux 
   #a) orginal method(as residual)
   G<-Rnet-LE-H  
@@ -420,6 +422,7 @@ while(tcurr<tmax){
        #calculate ABL growth rate
        dh.dt<-(1+2*Beta)*F0thetav/(gamma*h)
        if(F0thetav<=0.00)dh.dt<-0   #ABL collapses
+       
     }else{
       dh.dt<-0
       Fhthetav<-0
@@ -437,6 +440,7 @@ while(tcurr<tmax){
     #update ABL height
     h<-h+dh.dt*dt
     if(F0thetav<=0.00&ABLTF)h<-hmin    #override value:  ABL collapses
+    if(h>=hmax)h<-hmax #added max Bl depth
   } #if(atmrespondTF){
   if(groundwaterTF){
 	theta[i,1] = theta[i,2]#bc_t
