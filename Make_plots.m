@@ -10,14 +10,14 @@ end_index = start_index+50;
 START = datetime(datevec(t(start_index)))
 END = datetime(datevec(t(end_index)))
 %%
-H_exp = playaSpring.H(start_index:end_index,2).*playaSpring.H(start_index:end_index,3).*playaSpring.H(start_index:end_index,9);
+H_exp = playaSpring.H(start_index:end_index,2).*playaSpring.H(start_index:end_index,3).*playaSpring.H(start_index:end_index,15);
 LH_exp = playaSpring.LHflux(start_index:end_index,6); % @10.4 m 
 L = playaSpring.L(start_index:end_index,2);
 
 figure()
 plot(H_exp)
 hold on
-plot(L_exp)
+plot(LH_exp)
 %% Radiation plot
 start_index = 6410+12;
 end_index = 6698+24;
@@ -123,7 +123,7 @@ xlabel('time [hrs]')
 ylabel('LH [Wm$^{-2}$]')
 axis tight
 legend('Exp. Data','Uncoupled','Coupled','Shao et al. Uncoupled','Shao et al. Coupled')
-set(gcf, 'Position', [100, 100, 1500, 900])
+set(gcf, 'Position', [100, 100, 1100, 900])
 %%
 figure()
 plot(linspace(0,25,301),lwup)
@@ -136,7 +136,7 @@ xlabel('time [hrs]')
 ylabel('LWup [Wm$^{-2}$]')
 axis tight
 legend('Exp. Data','Uncoupled','Coupled','Shao et al. Uncoupled','Shao et al. Coupled')
-set(gcf, 'Position', [100, 100, 1500, 900])
+set(gcf, 'Position', [100, 100, 1100, 900])
 %% Make TKE plot
 e = playaSpring.tke(start_index:end_index,2);
 cnt = 1;
