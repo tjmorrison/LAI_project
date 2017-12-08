@@ -190,35 +190,35 @@ rvs<-rv.f(T=273.15+20,VPD=0:4000,gvmax=gvmax)
 
 #function to calculate aerodynamic resistance
 ##########orginal formulation################
-#ra.f<-function(Ur=1,zr=50,z0=z0,d=0,rho=1,tke=tke){
+ra.f<-function(Ur=1,zr=50,z0=z0,d=0,rho=1,tke=tke){
   #arguments:  Ur is reference windspeed [m/s] at reference height zr
   #            zr is reference height [m] where Ur applies
   #            z0 is roughness length [m]; 0.01m is typical value for crop
   #            d is displacement height [m]
   #            rho is air density [kg/m^3]
- # k<-0.4  #von Karman constant
- # tke = tke; 
- #CD<-(k^2)/(log((zr-d)/z0))^2   #aerodynamic transfer coefficient
- # ra<-1/(CD*Ur)                  #aerodynamic resistance [s/m]
- # return(ra)
-#} #ra.f<-function(){
+  k<-0.4  #von Karman constant
+  tke = tke; 
+ CD<-(k^2)/(log((zr-d)/z0))^2   #aerodynamic transfer coefficient
+  ra<-1/(CD*Ur)                  #aerodynamic resistance [s/m]
+  return(ra)
+} #ra.f<-function(){
 ############Shao et. al. 2013 for SGS scalar formulation#########
-ra.f<-function(zr=zr,z0=z0,tke=tke){
-  z0<-11e-3 #roughness length 0.001 for deseret playa (Chaoxun et al. 2016)
-  k<-0.4 #Von Karman constant
- C_k<-0.15 #empirical parameter ~0.15
-  l=zr #zr #mixing length, approximated as grid spacing
- Pr<-0.3 #Prandlt Number 
+#ra.f<-function(zr=zr,z0=z0,tke=tke){
+ # z0<-11e-3 #roughness length 0.001 for deseret playa (Chaoxun et al. 2016)
+ # k<-0.4 #Von Karman constant
+ #C_k<-0.15 #empirical parameter ~0.15
+#  l=zr #zr #mixing length, approximated as grid spacing
+# Pr<-0.3 #Prandlt Number 
   
   #calculate the Subgrid eddy diffusivity
-  K_sg<-C_k*(sqrt(tke)/k) 
+ # K_sg<-C_k*(sqrt(tke)/k) 
   
   #Calculate the subgrid eddy diffusivity for a scalar
-  K_hsg<-K_sg*Pr^(-1)
+ # K_hsg<-K_sg*Pr^(-1)
   
   #calculate the subgrid areodynamic resistance
-  ra<-(zr/K_hsg)*log(zr/z0)
-}#ra.f<-function()
+ # ra<-(zr/K_hsg)*log(zr/z0)
+#}#ra.f<-function()
 
 
 #V2(120211): initialize T with equilibrium value (determined through "uniroot")

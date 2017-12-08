@@ -67,7 +67,7 @@ ylabel('E [Wm$^{-2}$]')
 title('Energy Budget: Coupled with Playa Properties')
 %%
 %case 3: uncoupled Energy budget
-data_case3 = table2array(resultShaouncoupled);
+data_case3 = table2array(resultshaouncoupled);
 figure()
 plot(linspace(0,25,301),sw,'-.k')
 hold on 
@@ -83,7 +83,7 @@ ylabel('E [Wm$^{-2}$]')
 title('Energy Budget: Uncoupled with Shao Model')
 
 %% case 3 coupled Energy budget, no bl growth
-data_case4 = table2array(resultShaoatmcouplednoBLgrowth);
+data_case4 = table2array(resultshaocoupled);
 figure()
 plot(linspace(0,25,301),sw,'-.k')
 hold on 
@@ -105,7 +105,7 @@ hold on
 plot(linspace(0,25,1441),data_case1((end-(24*60)):end,7),'-.r')
 plot(linspace(0,25,1441),data_case2((end-(24*60)):end,7),'--r')
 plot(linspace(0,25,1441),data_case3((end-(24*60)):end,7),'-.b')
-plot(linspace(0,25,1433),data_case4(:,7),'--b')
+plot(linspace(0,25,1433),data_case4((end-1432):end,7),'--b')
 xlabel('time [hrs]')
 ylabel('H [Wm$^{-2}$]')
 axis tight
