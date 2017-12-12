@@ -1,28 +1,146 @@
 %Travis Morrison 
 %LAI Plots 
 clear; close all; clc;
+%%
 %load('/Users/travismorrison/Local_Data/MATERHORN/data/tower_data/Playa_tower_averaged /playaSpring30minLinDetUTESpac3.mat');
 %home laptop
 %load('C:\Users\tjmor\OneDrive\Research\Data\MATERHORN\PlayaSpring_5minAvg_GPF_LinDet_2013_05_24.mat')
 %Load 30 min utespac3 code
 load('C:\Users\tjmor\OneDrive\Research\Data\MATERHORN\playaSpring30minLinDetUTESpac3.mat')
-%t = playaSpring.tke(:,1);
 
+%uiopen('C:\Users\tjmor\OneDrive\Documents\classes\LAI\Final_project\data\orginal_coupled.csv',1)
+uiopen('C:\Users\tjmor\OneDrive\Documents\classes\LAI\Final_project\data\orginal_uncoupled.csv',1)
+%t = playaSpring.tke(:,1);
+%% Make energy budget plot & T plot with simulated data 
+
+figure()
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,3))-273.15)
+hold on
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,4))-273.15)
+legend('T_s','T(z=26 m)')
+ylabel('T [$^{o}$C]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+
+figure()
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,6)))
+hold on
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,7)))
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,8)))
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,9)))
+legend('R_n','H','H_L','G')
+ylabel('E [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+
+%%
+figure()
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,3))-273.15)
+hold on
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,4))-273.15)
+legend('T_s','T(z=26 m)')
+ylabel('T [$^{o}$C]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+
+figure()
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,6)))
+hold on
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,7)))
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,8)))
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,9)))
+legend('R_n','H','H_L','G')
+ylabel('E [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+%%
+figure()
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,3))-273.15)
+hold on
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,4))-273.15)
+legend('T_s','T(z=26 m)')
+ylabel('T [$^{o}$C]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+
+figure()
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,6)))
+hold on
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,7)))
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,8)))
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,9)))
+legend('R_n','H','H_L','G')
+ylabel('E [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+%%
+figure()
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,3))-273.15)
+hold on
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,4))-273.15)
+legend('T_s','T(z=26 m)')
+ylabel('T [$^{o}$C]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+
+figure()
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,6)))
+hold on
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,7)))
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,8)))
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,9)))
+legend('R_n','H','H_L','G')
+ylabel('E [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+%% BL depth
+figure()
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,15)))
+ylabel('h [m]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+
+figure()
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,15)))
+ylabel('h [m]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
 %% 30 min index
 start_index = 1008+14;
 end_index = start_index+2*25;
 START = datetime(datevec(playaSpring.H(start_index,1)))
 END = datetime(datevec(playaSpring.H(end_index,1)))
+START_1Hz = datetime(datevec(playaSpring.Playa_1HZ(start_index,1)))
+%% Plot results against exp data
 
-%%
 H_exp = playaSpring.H(start_index:end_index,2).*playaSpring.H(start_index:end_index,3).*playaSpring.H(start_index:end_index,15);
 LH_exp = playaSpring.LHflux(start_index:end_index,6); % @10.4 m 
-L = playaSpring.L(start_index:end_index,2);
+L = playaSpring.L(start_index:end_index,2); %Obukhov Length
+T = playaSpring.Playa_1HZ(start_index:end_index,2);
 
+%% T_air
 figure()
-plot(H_exp)
-hold on
-plot(LH_exp)
+plot(linspace(0,25,51),T,'-k')
+hold on 
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,4))-273.15,'--b')
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,4))-273.15,'-b')
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,4))-273.15,'--r')
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,4))-273.15,'-r')
+legend('Obs','HFMO NC','HFMO C','HFSH13 NC','HFSH13 C')
+ylabel('T [$^{o}$C]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+%% H
+figure()
+plot(linspace(0,25,51),H_exp,'-k')
+hold on 
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,7)),'--b')
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,7)),'-b')
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,7)),'--r')
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,7)),'-r')
+legend('Obs','HFMO NC','HFMO C','HFSH13 NC','HFSH13 C')
+ylabel('H [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+%% H_L
+figure()
+plot(linspace(0,25,51),LH_exp,'-k')
+hold on 
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,8)),'--b')
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,8)),'-b')
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,8)),'--r')
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,8)),'-r')
+legend('Obs','HFMO NC','HFMO C','HFSH13 NC','HFSH13 C')
+ylabel('H$_L$ [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
 %% Radiation plot
 start_index = 6410+12;
 end_index = 6698+24;
@@ -32,6 +150,47 @@ end_index = 6698+24;
 sw = table2array(playa0520135min(start_index:end_index,6));
 lw = table2array(playa0520135min(start_index:end_index,8));
 lwup = table2array(playa0520135min(start_index:end_index,9));
+swup = table2array(playa0520135min(start_index:end_index,7));
+Rn = table2array(playa0520135min(start_index:end_index,10));
+G = table2array(efsplayaderek0520135min(start_index:end_index,6));
+%compare rad 
+%Rn
+figure()
+plot(linspace(0,25,301),Rn,'-k')
+hold on
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,6)),'--b')
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,6)),'-b')
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,6)),'--r')
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,6)),'-r')
+legend('Obs','HFMO NC','HFMO C','HFSH13 NC','HFSH13 C')
+ylabel('R$_n$ [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+
+%compare rad 
+%lwup
+figure()
+plot(linspace(0,25,301),lwup,'-k')
+hold on
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,5)),'--b')
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,5)),'-b')
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,5)),'--r')
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,5)),'-r')
+legend('Obs','HFMO NC','HFMO C','HFSH13 NC','HFSH13 C')
+ylabel('L$_{\uparrow}$ [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+%% G
+figure()
+plot(linspace(0,25,301),-G,'-k')
+hold on
+plot(linspace(0,25,1441),table2array(orginaluncoupled((end-1440):end,9)),'--b')
+plot(linspace(0,25,1441),table2array(orginalcoupled((end-1440):end,9)),'-b')
+plot(linspace(0,25,1441),table2array(resultshaouncoupled((end-1440):end,9)),'--r')
+plot(linspace(0,25,1441),table2array(resultshaocoupled((end-1440):end,9)),'-r')
+legend('Obs','HFMO NC','HFMO C','HFSH13 NC','HFSH13 C')
+ylabel('G [Wm$^{-2}$]','interpreter','latex','Fontsize',15)
+xlabel('time [hour]','interpreter','latex','Fontsize',15)
+%%
+%EXP data
 figure()
 plot(linspace(0,25,301),sw,'-k')
 hold on 
