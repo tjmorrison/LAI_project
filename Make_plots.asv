@@ -41,28 +41,17 @@ legend('SWdn','LWdn')
 xlabel('time [hrs]','interpreter','latex','Fontsize',25)
 ylabel('Radiation [Wm$^{-2}$]','interpreter','latex','Fontsize',25)
 %% Plot L, U, T, plot
-L = playaSpring.L(start_index:end_index,2); 
-Temp = playaSpring.derivedT(start_index:end_index,4); 
-U = playaSpring.spdAndDir(start_index:end_index,3); 
+L 
+lw = table2array(playa0520135min(start_index:end_index,8));
+lwup = table2array(playa0520135min(start_index:end_index,9));
 figure()
-subplot(3,1,1)
-plot(linspace(0,25,51),L,'-k')
-axis([0 25 -100 100])
-%xlabel('time [hrs]','interpreter','latex','Fontsize',25)
-ylabel('25-m L [m]','interpreter','latex','Fontsize',15)
-
-subplot(3,1,2)
-plot(linspace(0,25,51),Temp,'-k')
+plot(linspace(0,25,301),sw,'-k')
+hold on 
+plot(linspace(0,25,301),lw,'--k')
 axis tight
-%xlabel('time [hrs]','interpreter','latex','Fontsize',25)
-ylabel('25-m $\theta_v$ [K]','interpreter','latex','Fontsize',15)
-
-subplot(3,1,3)
-plot(linspace(0,25,51),U,'-k')
-axis tight
-xlabel('time [hrs]','interpreter','latex','Fontsize',15)
-ylabel('25-m U [ms$^{-1}$]','interpreter','latex','Fontsize',15)
-
+legend('SWdn','LWdn')
+xlabel('time [hrs]','interpreter','latex','Fontsize',25)
+ylabel('Radiation [Wm$^{-2}$]','interpreter','latex','Fontsize',25)
 
 
 %% Plot results 

@@ -399,7 +399,7 @@ while(tcurr<tmax){
         srce   = infil-sum(evap)    
     	LE  = sum(evap)*(lambda/dt)*(dx*1000)  #[W/m2] 
   } else{#LE = (lambda*rho/(ra+rv))*(qstar-qa)} #[W/m2]
-    LE=.18*H}
+    LE=.18*H} #Overide latent HF with LE = H/Bowen Ratio
   ###########################################determine ground heat flux 
   #a) orginal method(as residual)
   G<-Rnet-LE-H  
