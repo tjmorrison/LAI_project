@@ -1,12 +1,13 @@
 %Travis Morrison 
 %LAI Plots 
-%clear; close all; clc;
+clear; close all; clc;
 load('/Users/travismorrison/Local_Data/MATERHORN/data/tower_data/Playa_tower_averaged /playaSpring30minLinDetUTESpac3.mat');
 
 t = playaSpring.tke(:,1);
 
-start_index = 1008+(7*2);
-end_index = start_index+50;
+start_index = 1008+(7*2)+28+48;
+%end_index = start_index+50;
+end_index = start_index+2;
 START = datetime(datevec(t(start_index)))
 END = datetime(datevec(t(end_index)))
 %%

@@ -37,8 +37,8 @@ Rv<-461.40 #Ideal Gas Constant of water vapor [J/kg/K] (Appendix A.1.4 of Jacobs
 sigma<-5.670373E-8    #Stefan-Boltzmann constant [W/m2/K4]
 ##########################################
 vegcontrolTF<-FALSE    #vegetation control?
-atmrespondTF<-FALSE    #does atmosphere respond to surface fluxes?
-ABLTF<-FALSE           #does ABL growth or decay, according to surface heat fluxes?
+atmrespondTF<-TRUE    #does atmosphere respond to surface fluxes?
+ABLTF<-TRUE           #does ABL growth or decay, according to surface heat fluxes?
 groundwaterTF<-FALSE   #does the groundwater respond to the atmosphere?
 cloudTF<-FALSE         #cloud physics response to relative humidity
 
@@ -66,7 +66,7 @@ end_index = 6698+24 #correlates to May 24 0800 UTC
 #dir for laptop
 #dir <- "C:/Users/tjmor/OneDrive/Research/Data/MATERHORN/"
 #dir for school computer 
-dir<-"/Users/travismorrison/Local_Data/MATERHORN/data/tower_data/LAI_data/"
+dir<-"/Users/travismorrison/Documents/Local_Data/MATERHORN/data/tower_data/LAI_data/"
 #filenm<-paste(dir,"playa_05_2013_5min_data_only.csv",sep="")
 
 
@@ -190,35 +190,35 @@ rvs<-rv.f(T=273.15+20,VPD=0:4000,gvmax=gvmax)
 
 #function to calculate aerodynamic resistance
 ##########orginal formulation################
-#ra.f<-function(Ur=1,zr=50,z0=z0,d=0,rho=1,tke=tke){
+ra.f<-function(Ur=1,zr=50,z0=z0,d=0,rho=1,tke=tke){
   #arguments:  Ur is reference windspeed [m/s] at reference height zr
   #            zr is reference height [m] where Ur applies
   #            z0 is roughness length [m]; 0.01m is typical value for crop
   #            d is displacement height [m]
   #            rho is air density [kg/m^3]
- # k<-0.4  #von Karman constant
- # tke = tke; 
- #CD<-(k^2)/(log((zr-d)/z0))^2   #aerodynamic transfer coefficient
- # ra<-1/(CD*Ur)                  #aerodynamic resistance [s/m]
- # return(ra)
-#} #ra.f<-function(){
+  k<-0.4  #von Karman constant
+  tke = tke; 
+ CD<-(k^2)/(log((zr-d)/z0))^2   #aerodynamic transfer coefficient
+  ra<-1/(CD*Ur)                  #aerodynamic resistance [s/m]
+  return(ra)
+} #ra.f<-function(){
 ############Shao et. al. 2013 for SGS scalar formulation#########
-ra.f<-function(zr=zr,z0=z0,tke=tke){
-  z0<-11e-3 #roughness length 0.001 for deseret playa (Chaoxun et al. 2016)
-  k<-0.4 #Von Karman constant
- C_k<-0.15 #empirical parameter ~0.15
-  l=zr #zr #mixing length, approximated as grid spacing
- Pr<-0.3 #Prandlt Number 
+#ra.f<-function(zr=zr,z0=z0,tke=tke){
+ # z0<-11e-3 #roughness length 0.001 for deseret playa (Chaoxun et al. 2016)
+  #k<-0.4 #Von Karman constant
+ #C_k<-0.15 #empirical parameter ~0.15
+  #l=zr #zr #mixing length, approximated as grid spacing
+ #Pr<-0.3 #Prandlt Number 
   
   #calculate the Subgrid eddy diffusivity
-  K_sg<-C_k*(sqrt(tke)/k) 
+  #K_sg<-C_k*(sqrt(tke)/k) 
   
   #Calculate the subgrid eddy diffusivity for a scalar
-  K_hsg<-K_sg*Pr^(-1)
+  #K_hsg<-K_sg*Pr^(-1)
   
   #calculate the subgrid areodynamic resistance
-  ra<-(zr/K_hsg)*log(zr/z0)
-}#ra.f<-function()
+  #ra<-(zr/K_hsg)*log(zr/z0)
+#}#ra.f<-function()
 
 
 #V2(120211): initialize T with equilibrium value (determined through "uniroot")
@@ -361,6 +361,7 @@ while(tcurr<tmax){
   esat<-satvap(T-273.15)/100   #saturation specific humidity [hPa]
   e<-qa*Psurf/(Rd/Rv)        #vapor pressure [hPa]
   VPD<-100*(esat-e)            #vapor pressure deficit [Pa]
+  
   qstar<-(Rd/Rv)*esat/Psurf   #saturation specific humidity [g/g]
   if(vegcontrolTF){
    rv<-rv.f(T=T,VPD=VPD,gvmax=gvmax)
